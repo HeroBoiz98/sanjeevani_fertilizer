@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Fertilizer</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to the CSS file -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .notification {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s, fadeOut 0.5s 2.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .database-button {
+            background-color: #007bff; /* Blue color for the DATABASE button */
+            margin-bottom: 20px; /* Space below the button */
+            padding: 10px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        .database-button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+    </style>
+</head>
+<body>
+    <h1>Sanjeevani Fertilizers - Database Entry</h1>
+    <button class="database-button" onclick="redirectToDatabase()">DATABASE</button>
+    <form id="fertilizerForm" action="/add-fertilizer" method="POST">
+        <label for="fertilizerName">Fertilizer Name:</label>
+        <input type="text" id="fertilizerName" name="fertilizerName" required>
+
+        <label for="composition">Fertilizer Composition (comma separated):</label>
+        <input type="text" id="composition" name="composition" required>
+
+        <label>Type of Fertilizer:</label>
+        <label for="organic">Organic</label>
+        <input type="checkbox" id="organic" name="type" value="organic">
+        <label for="synthetic">Synthetic</label>
+        <input type="checkbox" id="synthetic" name="type" value="synthetic">
+        <label for="slowRelease">Slow Release</label>
+        <input type="checkbox" id="slowRelease" name="type" value="slow release">
+        <label for="liquid">Liquid</label>
+        <input type="checkbox" id="liquid" name="type" value="liquid">
+        <label for="granular">Granular</label>
+        <input type="checkbox" id="granular" name="type" value="granular">
+
+        <label for="soilCategory">Soil Category:</label>
+        <input type="text" id="soilCategory" name="soilCategory" required>
+
+        <label for="dosage">Dosage:</label>
+        <input type="text" id="dosage" name="dosage" required>
+
+        <label for="use">Use of Fertilizer:</label>
+        <input type="text" id="use" name="use" required>
+
+        <label for="environmentalCondition">Environmental Condition:</label>
+        <input type="text" id="environmentalCondition" name="environmentalCondition" required>
+
+        <label for="efficiency">Efficiency:</label>
+        <input type="text" id="efficiency" name="efficiency" required>
+
+        <button type="submit">Add Fertilizer</button>
+    </form>
+
+    <div class="notification" id="notification">Fertilizer added successfully!</div>
+
+    <script>
+        document.getElementById('fertilizerForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            // Convert composition string to an array
+            data.composition = data.composition.split(',').map(item => item.trim());
+
+            // Get the selected types of fertilizers (checkboxes)
+            const type = [];
+            if (document.getElementById('organic').checked) {
+                type.push('organic');
+            }
+            if (document.getElementById('synthetic').checked) {
+                type.push('synthetic');
+            }
+            if (document.getElementById('slowRelease').checked) {
+                type.push('slow release');
+            }
+            if (document.getElementById('liquid').checked) {
+                type.push('liquid');
+            }
+            if (document.getElementById('granular').checked) {
+                type.push('granular');
+            }
+
+            // Add the selected type values to the data object
+            data.type = type;
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => {
+                if (response.ok) {
+                    showNotification();
+                    this.reset(); // Reset the form fields
+                } else {
+                    alert('Error adding fertilizer. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding fertilizer. Please try again.');
+            });
+        });
+
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000); // Hide notification after 3 seconds
+        }
+
+        // Redirect to fertilizers.html
+        function redirectToDatabase() {
+            window.location.href = 'fertilizers.html';
+        }
+    </script>
+</body>
+</html>
