@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fertilizers List</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        #searchBar {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px; /* Space between cards */
+            max-width: 1200px; /* Set a max width for the container */
+            margin: 0 auto; /* Center the container */
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.2s;
+            width: 300px; /* Fixed width for cards */
+            max-width: 100%; /* Responsive */
+            box-sizing: border-box; /* Include padding in width */
+        }
+
+        .card:hover {
+            transform: scale(1.02);
+        }
+
+        .card h2 {
+            margin: 0 0 10px;
+            color: #28a745;
+        }
+
+        .card p {
+            margin: 5px 0;
+        }
+
+        .card .type {
+            font-weight: bold;
+        }
+
+        .edit-button, .delete-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .edit-button:hover, .delete-button:hover {
+            background-color: #0056b3;
+        }
+
+        .edit-form {
+            display: none;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .edit-form input {
+            width: calc(100% - 20px);
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+
+        .dosage-section {
+            margin-top: 10px;
+        }
+
+        .dosage-section h3 {
+            margin: 0 0 10px;
+        }
+
+        .label {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* Media Queries for Responsive Design */
+        @media (max-width: 768px) {
+            .card {
+                width: 100%; /* Full width on smaller screens */
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .card {
+                width: calc(50% - 20px); /* Two cards per row */
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .card {
+                width: calc(33.33% - 20px); /* Three cards per row */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Fertilizers List</h1>
+    <input type="text" id="searchBar" placeholder="Search for fertilizers..." onkeyup="searchFertilizers()">
+    <div class="container" id="fertilizersContainer"></div>
+
+    <script>
+        let fertilizers = []; // Store fertilizers globally
+
+        // Fetch fertilizers from the server
+        fetch('/fertilizers')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                fertilizers = data; // Store fetched fertilizers
+                displayFertilizers(fertilizers); // Display all fertilizers initially
+            })
+            .catch(error => {
+                console.error('Error fetching fertilizers:', error);
+                const container = document.getElementById('fertilizersContainer');
+                container.innerHTML = '<p>Error fetching fertilizers. Please try again later.</p>';
+            });
+
+        // Function to display fertilizers
+        function displayFertilizers(fertilizersToDisplay) {
+            const container = document.getElementById('fertilizersContainer');
+            container.innerHTML = ''; // Clear previous content
+            fertilizersToDisplay.forEach(fertilizer => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h2>${fertilizer.fertilizerName}</h2>
+                    <p><strong>Composition:</strong> ${fertilizer.composition.join(', ')}</p>
+                    <p><strong>Type:</strong> ${fertilizer.type.join(', ')}</p>
+                    <p><strong>Soil Category:</strong> ${fertilizer.soilCategory}</p>
+                    <p><strong>Dosage:</strong> ${fertilizer.dosage}</p>
+                    <p><strong>Use:</strong> ${fertilizer.use}</p>
+                    <p><strong>Environmental Condition:</strong> ${fertilizer.environmentalCondition}</p>
+                    <p><strong>Efficiency:</strong> ${fertilizer.efficiency}</p>
+                    <button class="edit-button" onclick="showEditForm('${fertilizer._id}')">Edit</button>
+                    <button class="delete-button" onclick="deleteFertilizer('${fertilizer._id}')">Delete</button>
+                    <div class="edit-form" id="editForm-${fertilizer._id}">
+                        <h3>Edit Fertilizer Details</h3>
+                        <label class="label">Fertilizer Name</label>
+                        <input type="text" value="${fertilizer.fertilizerName}" id="editFertilizerName-${fertilizer._id}">
+                        <label class="label">Composition (comma separated)</label>
+                        <input type="text" value="${fertilizer.composition.join(', ')}" id="editComposition-${fertilizer._id}">
+                        <label class="label">Soil Category</label>
+                        <input type="text" value="${fertilizer.soilCategory}" id="editSoilCategory-${fertilizer._id}">
+                        <label class="label">Dosage</label>
+                        <input type="text" value="${fertilizer.dosage}" id="editDosage-${fertilizer._id}">
+                        <label class="label">Use</label>
+                        <input type="text" value="${fertilizer.use}" id="editUse-${fertilizer._id}">
+                        <label class="label">Environmental Condition</label>
+                        <input type="text" value="${fertilizer.environmentalCondition}" id="editEnvironmentalCondition-${fertilizer._id}">
+                        <label class="label">Efficiency</label>
+                        <input type="text" value="${fertilizer.efficiency}" id="editEfficiency-${fertilizer._id}">
+
+                        <button onclick="updateFertilizer('${fertilizer._id}')">Update</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Search function
+        function searchFertilizers() {
+            const query = document.getElementById('searchBar').value.toLowerCase();
+            const filteredFertilizers = fertilizers.filter(fertilizer => {
+                return (
+                    fertilizer.fertilizerName.toLowerCase().includes(query) ||
+                    fertilizer.composition.some(comp => comp.toLowerCase().includes(query)) ||
+                    fertilizer.soilCategory.toLowerCase().includes(query) ||
+                    fertilizer.use.toLowerCase().includes(query) ||
+                    fertilizer.environmentalCondition.toLowerCase().includes(query) ||
+                    fertilizer.efficiency.toLowerCase().includes(query)
+                );
+            });
+            displayFertilizers(filteredFertilizers); // Display filtered fertilizers
+        }
+
+        function showEditForm(id) {
+            const form = document.getElementById(`editForm-${id}`);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function updateFertilizer(id) {
+            const fertilizerName = document.getElementById(`editFertilizerName-${id}`).value;
+            const composition = document.getElementById(`editComposition-${id}`).value.split(',').map(item => item.trim());
+            const soilCategory = document.getElementById(`editSoilCategory-${id}`).value;
+            const dosage = document.getElementById(`editDosage-${id}`).value;
+            const use = document.getElementById(`editUse-${id}`).value;
+            const environmentalCondition = document.getElementById(`editEnvironmentalCondition-${id}`).value;
+            const efficiency = document.getElementById(`editEfficiency-${id}`).value;
+
+            const updatedFertilizer = {
+                fertilizerName,
+                composition,
+                soilCategory,
+                dosage,
+                use,
+                environmentalCondition,
+                efficiency,
+            };
+
+            fetch(`/fertilizers/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedFertilizer),
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Fertilizer updated successfully!');
+                    location.reload(); // Reload the page to see the updated fertilizer
+                } else {
+                    alert('Error updating fertilizer.');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating fertilizer:', error);
+                alert('Error updating fertilizer.');
+            });
+        }
+
+        function deleteFertilizer(id) {
+            if (confirm('Are you sure you want to delete this fertilizer?')) {
+                fetch(`/fertilizers/${id}`, {
+                    method: 'DELETE',
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Fertilizer deleted successfully!');
+                        location.reload(); // Reload the page to see the updated fertilizer list
+                    } else {
+                        alert('Error deleting fertilizer.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting fertilizer:', error);
+                    alert('Error deleting fertilizer.');
+                });
+            }
+        }
+    </script>
+</body>
+</html>
